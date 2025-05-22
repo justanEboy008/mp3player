@@ -82,6 +82,15 @@ class MusicPlayer:
         btn_width, btn_height = 50, 50
         font_size = 20
 
+        # Timeline slider unter den Steuerungsbuttons
+        self.timeline_slider = ctk.CTkSlider(root, from_=0, to=100, command=self.seek_position,
+                                            progress_color="#1DB954", height=15)
+        self.timeline_slider.pack(pady=(5, 0), fill="x", padx=20)
+
+        self.updating_slider = True
+        self.current_duration = 0
+
+
         self.play_button = ctk.CTkButton(self.controls_frame, text="▶", command=self.play_music,
                                         width=btn_width, height=btn_height, corner_radius=btn_height // 2,
                                         font=("Arial", font_size), fg_color="#1DB954")
@@ -285,9 +294,9 @@ class MusicPlayer:
                     self.album_art_label.configure(image=photo, text="")
                     self.album_art_label.image = photo
                     return
-            self.album_art_label.configure(image=NONE, text="")
+            self.album_art_label.configure(image=None, text="")
         except Exception:
-            self.album_art_label.configure(image=NONE, text="")
+            self.album_art_label.configure(image=None, text="")
 
     def check_music_end(self):
         if not pygame.mixer.music.get_busy() and not self.paused:

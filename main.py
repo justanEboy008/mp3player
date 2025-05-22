@@ -343,6 +343,17 @@ class MusicPlayer:
     def set_volume(self, val):
         pygame.mixer.music.set_volume(float(val) / 100)
 
+    def seek_position(self, value):
+    if not self.music_files or self.paused:
+        return
+    try:
+        self.updating_slider = False  # Deaktiviere Slider-Update während des Sprungs
+        pygame.mixer.music.play(start=value)
+        self.updating_slider = True
+    except Exception as e:
+        self.status_label.configure(text=f"Fehler beim Springen: {e}")
+
+
 if __name__ == "__main__":
     root = ctk.CTk()
     app = MusicPlayer(root)

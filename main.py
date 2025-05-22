@@ -285,9 +285,9 @@ class MusicPlayer:
                     self.album_art_label.configure(image=photo, text="")
                     self.album_art_label.image = photo
                     return
-            self.album_art_label.configure(image='', text="")
+            self.album_art_label.configure(image=NONE, text="")
         except Exception:
-            self.album_art_label.configure(image='', text="")
+            self.album_art_label.configure(image=NONE, text="")
 
     def check_music_end(self):
         if not pygame.mixer.music.get_busy() and not self.paused:

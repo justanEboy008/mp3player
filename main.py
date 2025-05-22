@@ -106,12 +106,15 @@ class MusicPlayer:
  
         self.timeline_slider = ctk.CTkSlider(root, from_=0, to=100, command=self.seek_position,
                                      progress_color="#1DB954", height=15)
+
 self.timeline_slider.pack(pady=(5, 0), fill="x", padx=20)
 self.updating_slider = True
 self.current_duration = 0
 
 self.status_label = ctk.CTkLabel(root, text="Status: Bereit", text_color="#1DB954", font=("Arial", 12))
-        self.status_label.pack(pady=5)
+self.status_label.pack(pady=5)
+
+
  
         pygame.mixer.music.set_volume(0.7)
         self.check_music_end()

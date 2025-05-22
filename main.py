@@ -106,10 +106,12 @@ class MusicPlayer:
  
         self.timeline_slider = ctk.CTkSlider(root, from_=0, to=100, command=self.seek_position,
                                      progress_color="#1DB954", height=15)
-        self.timeline_slider.pack(pady=(5, 0), fill="x", padx=20)
-        self.updating_slider = True  # Schutz beim Draggen
-        self.current_duration = 0
+self.timeline_slider.pack(pady=(5, 0), fill="x", padx=20)
+self.updating_slider = True
+self.current_duration = 0
 
+self.status_label = ctk.CTkLabel(root, text="Status: Bereit", text_color="#1DB954", font=("Arial", 12))
+        self.status_label.pack(pady=5)
  
         pygame.mixer.music.set_volume(0.7)
         self.check_music_end()
@@ -294,17 +296,18 @@ class MusicPlayer:
             self.album_art_label.configure(image='', text="")
  
     def check_music_end(self):
-    if not pygame.mixer.music.get_busy() and not self.paused:
-        self.play_next()
-    else:
-        if self.updating_slider:
-            try:
-                pos = pygame.mixer.music.get_pos() / 1000  # ms → s
-                self.timeline_slider.set(pos)
-            except:
-                pass
-    self.root.after(1000, self.check_music_end)
-
+        if not pygame.mixer.music.get_busy() and not self.paused:
+            self.play_next()
+        else:
+            if self.updating_slider:
+                try:
+                    pos = pygame.mixer.music.get_pos() / 1000
+                    self.timeline_slider.set(pos)
+                except:
+                    pass
+        self.root.after(1000, self.check_music_end)
+            self.play_next()
+        self.root.after(1000, self.check_music_end)
  
     def play_music(self):
         if not self.music_files:
@@ -318,16 +321,16 @@ class MusicPlayer:
             pygame.mixer.music.play()
             self.paused = False
             audio = MP3(file, ID3=ID3)
-            self.current_duration = int(audio.info.length)
-            self.timeline_slider.configure(to=self.current_duration)
-            self.timeline_slider.set(0)
-
             title = str(audio.tags.get('TIT2', os.path.basename(file)))
             artist = str(audio.tags.get('TPE1', 'Unbekannter Künstler'))
             self.track_title.configure(text=str(title))
             self.track_artist.configure(text=str(artist))
             self.status_label.configure(text=f"Spielt: {os.path.basename(file)}")
             self.display_album_art(file)
+
+            self.current_duration = int(audio.info.length)
+            self.timeline_slider.configure(to=self.current_duration)
+            self.timeline_slider.set(0)
         except Exception as e:
             self.status_label.configure(text=f"Fehler: {str(e)}")
  
@@ -349,17 +352,17 @@ class MusicPlayer:
  
     def set_volume(self, val):
         pygame.mixer.music.set_volume(float(val) / 100)
-    
+ 
 
     def seek_position(self, value):
-    if not self.music_files or self.paused:
-        return
-    self.updating_slider = False
-    pygame.mixer.music.play(start=value)
-    self.updating_slider = True
+        if not self.music_files or self.paused:
+            return
+        self.updating_slider = False
+        pygame.mixer.music.play(start=value)
+        self.updating_slider = True
+    
 
-if __name__ == "__main__":
+    if __name__ == "__main__":
     root = ctk.CTk()
     app = MusicPlayer(root)
     root.mainloop()
-

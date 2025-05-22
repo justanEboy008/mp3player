@@ -114,8 +114,6 @@ self.current_duration = 0
 self.status_label = ctk.CTkLabel(root, text="Status: Bereit", text_color="#1DB954", font=("Arial", 12))
 self.status_label.pack(pady=5)
 
-
- 
         pygame.mixer.music.set_volume(0.7)
         self.check_music_end()
  

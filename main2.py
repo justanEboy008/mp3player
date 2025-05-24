@@ -3,13 +3,16 @@ import os
 import random
 import subprocess
 import threading
- 
 import customtkinter as ctk
 import pygame
 from PIL import Image
 from customtkinter import CTkImage
 from mutagen.id3 import ID3, APIC
 from mutagen.mp3 import MP3
+
+# Initialize pygame mixer with default audio device
+pygame.mixer.init()
+pygame.mixer.music.set_volume(0.7)
  
 SUPPORTED_FORMATS = ['.mp3', '.wav', '.ogg']
  
@@ -36,21 +39,18 @@ class MusicPlayer:
         self.left_controls = ctk.CTkFrame(self.top_frame, fg_color="transparent")
         self.left_controls.grid(row=0, column=0, sticky="n")
  
-        self.shuffle_button = ctk.CTkButton(self.left_controls, text="ð Shuffle: Off", command=self.toggle_shuffle,
+        self.shuffle_button = ctk.CTkButton(self.left_controls, text="🔀 Shuffle: Off", command=self.toggle_shuffle,
                                             width=140, height=35, corner_radius=18, fg_color="#121212", text_color="white",
                                             hover_color="#1DB954")
         self.shuffle_button.pack(pady=(0, 10))
  
-        self.scan_button = ctk.CTkButton(self.left_controls, text="ð USB durchsuchen", command=self.scan_usb,
+        self.scan_button = ctk.CTkButton(self.left_controls, text="🔄 USB durchsuchen", command=self.scan_usb,
                                          width=140, height=35, corner_radius=18, fg_color="#121212", text_color="white",
                                          hover_color="#1DB954")
         self.scan_button.pack()
  
-        # Then add this button somewhere in your UI, e.g. in left_controls:
-        self.bt_button = ctk.CTkButton(self.left_controls, text="ðµ Bluetooth Setup", command=self.open_bluetoothctl,
-                                       width=140, height=35, corner_radius=18, fg_color="#121212", text_color="white",
-                                       hover_color="#1DB954")
-        self.bt_button.pack(pady=(10, 0))
+        # Add some padding to balance the layout
+        ctk.CTkLabel(self.left_controls, text="", height=35).pack(pady=(10, 0))
  
         # Album cover in center
         self.album_art_label = ctk.CTkLabel(self.top_frame, text="", width=180, height=180)
@@ -60,7 +60,7 @@ class MusicPlayer:
         self.right_controls = ctk.CTkFrame(self.top_frame, fg_color="transparent")
         self.right_controls.grid(row=0, column=2, sticky="n")
  
-        self.volume_label = ctk.CTkLabel(self.right_controls, text="LautstÃ¤rke", text_color="white", font=("Arial", 12))
+        self.volume_label = ctk.CTkLabel(self.right_controls, text="Lautstärke", text_color="white", font=("Arial", 12))
         self.volume_label.pack(pady=(0, 10))
  
         # Vertical volume slider with inverted direction
@@ -82,17 +82,17 @@ class MusicPlayer:
         btn_width, btn_height = 50, 50
         font_size = 20
  
-        self.play_button = ctk.CTkButton(self.controls_frame, text="â¶", command=self.play_music,
+        self.play_button = ctk.CTkButton(self.controls_frame, text="▶", command=self.play_music,
                                          width=btn_width, height=btn_height, corner_radius=btn_height // 2,
                                          font=("Arial", font_size), fg_color="#1DB954")
         self.play_button.grid(row=0, column=1, padx=5)
  
-        self.pause_button = ctk.CTkButton(self.controls_frame, text="â¸", command=self.pause_music,
+        self.pause_button = ctk.CTkButton(self.controls_frame, text="⏸", command=self.pause_music,
                                           width=btn_width, height=btn_height, corner_radius=btn_height // 2,
                                           font=("Arial", font_size), fg_color="#1DB954")
         self.pause_button.grid(row=0, column=2, padx=5)
  
-        self.next_button = ctk.CTkButton(self.controls_frame, text="â­", command=self.play_next,
+        self.next_button = ctk.CTkButton(self.controls_frame, text="⏭", command=self.play_next,
                                          width=btn_width, height=btn_height, corner_radius=btn_height // 2,
                                          font=("Arial", font_size), fg_color="#1DB954")
         self.next_button.grid(row=0, column=3, padx=5)
@@ -107,7 +107,6 @@ class MusicPlayer:
         self.status_label = ctk.CTkLabel(root, text="Status: Bereit", text_color="#1DB954", font=("Arial", 12))
         self.status_label.pack(pady=5)
  
-        pygame.mixer.music.set_volume(0.7)
         self.check_music_end()
  
         # Show folders if any
@@ -116,77 +115,7 @@ class MusicPlayer:
     def toggle_shuffle(self):
         self.shuffle = not self.shuffle
         status = "On" if self.shuffle else "Off"
-        self.shuffle_button.configure(text=f"ð Shuffle: {status}")
- 
-    def open_bluetoothctl(self):
-        threading.Thread(target=self.show_bluetooth_devices_popup, daemon=True).start()
- 
-    def show_bluetooth_devices_popup(self):
-        try:
-            # Start scanning
-            subprocess.run(['bluetoothctl', 'scan', 'on'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            subprocess.run(['sleep', '5'])
-            subprocess.run(['bluetoothctl', 'scan', 'off'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
- 
-            # Get list of devices
-            devices_out = subprocess.check_output(['bluetoothctl', 'devices'], text=True)
-            devices = []
- 
-            for line in devices_out.splitlines():
-                parts = line.split(' ', 2)
-                if len(parts) == 3:
-                    mac, name = parts[1], parts[2]
-                    devices.append((name, mac))
- 
-            self.root.after(0, lambda: self.show_devices_window(devices))
- 
-        except Exception as e:
-            self.root.after(0, lambda: self.status_label.configure(text=f"Bluetooth Fehler: {e}"))
- 
-    def show_devices_window(self, devices):
-        popup = ctk.CTkToplevel(self.root)
-        popup.title("Bluetooth GerÃ¤te")
-        popup.geometry("350x450")
- 
-        title = ctk.CTkLabel(popup, text="Gefundene Bluetooth GerÃ¤te", font=("Arial", 15, "bold"))
-        title.pack(pady=10)
- 
-        frame = ctk.CTkScrollableFrame(popup, width=320, height=350)
-        frame.pack(pady=5, padx=10)
- 
-        if devices:
-            for name, mac in devices:
-                row = ctk.CTkFrame(frame, fg_color="transparent")
-                row.pack(fill="x", pady=2)
- 
-                name_label = ctk.CTkLabel(row, text=name, width=150, anchor="w")
-                name_label.pack(side="left", padx=(0, 10))
- 
-                mac_label = ctk.CTkLabel(row, text=mac, width=110, anchor="w", text_color="#AAAAAA")
-                mac_label.pack(side="left")
- 
-                connect_btn = ctk.CTkButton(row, text="Verbinden", width=80, height=28, font=("Arial", 11),
-                                            command=lambda m=mac: self.connect_to_bluetooth_device(m))
-                connect_btn.pack(side="right")
-        else:
-            ctk.CTkLabel(frame, text="Keine GerÃ¤te gefunden.", font=("Arial", 12)).pack(pady=20)
- 
-    def connect_to_bluetooth_device(self, mac_address):
-        def connect():
-            try:
-                result = subprocess.check_output(['bluetoothctl', 'connect', mac_address], text=True,
-                                                 stderr=subprocess.STDOUT)
-                if "Connection successful" in result:
-                    self.root.after(0, lambda: self.status_label.configure(text=f"Verbunden mit {mac_address}"))
-                else:
-                    self.root.after(0, lambda: self.status_label.configure(
-                        text=f"Verbindung fehlgeschlagen: {mac_address}"))
-            except subprocess.CalledProcessError as e:
-                    error_msg = e.output.strip() if hasattr(e, 'output') else str(e)
-                    self.root.after(0, lambda msg=error_msg: self.status_label.configure(text=f"Fehler: {msg}"))
-
- 
-        threading.Thread(target=connect, daemon=True).start()
+        self.shuffle_button.configure(text=f"🔀 Shuffle: {status}")
  
     def find_usb_drives(self):
         # Use lsblk to find removable USB drives on Linux
@@ -307,7 +236,7 @@ class MusicPlayer:
             self.paused = False
             audio = MP3(file, ID3=ID3)
             title = str(audio.tags.get('TIT2', os.path.basename(file)))
-            artist = str(audio.tags.get('TPE1', 'Unbekannter KÃ¼nstler'))
+            artist = str(audio.tags.get('TPE1', 'Unbekannter Künstler'))
             self.track_title.configure(text=str(title))
             self.track_artist.configure(text=str(artist))
             self.status_label.configure(text=f"Spielt: {os.path.basename(file)}")
@@ -338,3 +267,4 @@ if __name__ == "__main__":
     root = ctk.CTk()
     app = MusicPlayer(root)
     root.mainloop()
+
